@@ -1,0 +1,8 @@
+﻿ffmpeg -re -i /dev/video0 -filter:v fps=12 -fflags +genpts -flush_packets 0 -f mpegts -pcr_period 50 "udp://239.192.1.100:5000?pkt_size=1316"
+
+ffmpeg -f v4l2 -input_format h264 -framerate 30 -video_size 640x480 -i /dev/video0 -fflags +genpts -flush_packets 0 -f mpegts -pcr_period 50 "udp://239.192.1.100:5000?pkt_size=1316"
+
+
+
+Run this one for best quality: 
+ffmpeg -f v4l2 -input_format h264 -framerate 30 -video_size 1920x1080 -i /dev/video0 -vcodec copy -acodec copy -fflags +genpts -flush_packets 0 -f mpegts -pcr_period 50 "udp://239.192.1.100:5000?pkt_size=1316"
