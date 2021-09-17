@@ -1,6 +1,6 @@
-#############################
-#FACIAL RECOGINITION PROGRAM#
-#############################
+###########################################################
+# FACIAL RECOGINITION PROGRAM WITH STREAMING - Unfinished #
+###########################################################
 
 #Python Packages
 import face_recognition #performs the faicial recognition
@@ -35,8 +35,11 @@ video_capture = cv2.VideoCapture(0)
 #fps = str(video_capture.get(cv2.CAP_PROP_FPS))
 
 
+
+
 # Structuring the FFmpeg string
 command = ['ffmpeg',
+           '-re',
            '-y',
            '-f', 'rawvideo',
            '-s', '640x480',
@@ -46,34 +49,28 @@ command = ['ffmpeg',
            '-an',
            '-vcodec', 'h264',
            '-b:v', '2000k',
-           '\"udp://239.192.1.100:5000?pkt_size=1316\"' ]
+           #'-fflags', '+genpts',
+           '-flush_packets', '0',
+           '-f', 'mpegts',
+           #'-pcr_period', '50',
+           'udp://239.192.1.100:5000?pkt_size=1316']
            
 
 # Subprocess to open pipe to command line
-proc = sp.Popen(command, stdin=sp.PIPE, stderr=sp.PIPE)
+proc = sp.Popen(command, stdin=sp.PIPE) #, stderr=sp.PIPE)
 
 
 # Load a sample picture for each person and learn how to recognize it.
 george_image = face_recognition.load_image_file("george.jpg")
 george_face_encoding = face_recognition.face_encodings(george_image)[0]
 
-mike_image = face_recognition.load_image_file("mike.jpg")
-mike_face_encoding = face_recognition.face_encodings(mike_image)[0]
-
-marion_image = face_recognition.load_image_file("Marion.jpg")
-marion_face_encoding = face_recognition.face_encodings(marion_image)[0]
-
 # Create arrays of known face encodings and their names
 known_face_encodings = [
-    george_face_encoding,
-    mike_face_encoding,
-    marion_face_encoding
+    george_face_encoding
 ]
 
 known_face_names = [
-    "George",
-    "Mike",
-    "Marion"
+    "George"
 ]
 
 # Initialize some variables
@@ -85,6 +82,10 @@ process_this_frame = True
 while True:
     # Grab a single frame of video
     ret, frame = video_capture.read()
+    
+    if not ret:
+        print("No video source detected")
+        break
 
     # Resize frame of video to 1/4 size for faster face recognition processing
     small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -147,15 +148,8 @@ while True:
         break
     
     # Writing the OpenCV video frame to the FFmpeg pipe process (previously defined)
-    for proc in process_list:
-            if __name__ == '__main__':
-                proc.start()
+    proc.stdin.write(frame.tostring())
     
-    try:
-        proc.stdin.write(frame.tostring())
-    except IOError as e:
-        if e.errno == errno.EPIPE:
-            print('WTF is going on')
 
 # Cleanly exit all processes
 video_capture.release()
